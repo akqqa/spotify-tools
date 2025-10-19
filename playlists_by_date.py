@@ -36,20 +36,24 @@ def split_tracks():
     while cont:
         results = sp.current_user_saved_tracks(limit=50, offset=count)
         for idx, item in enumerate(results['items']):
+            #
             date_added = datetime.fromisoformat(item["added_at"][:-1])
             current_year = date_added.year
             current_half = 1 if date_added.month <= 6 else 2    
-            track = item['track']
+            # Break if reached the final year
             if (date_added.year < final_year):
                 cont = False
                 break
+            # Add to appropriate playlist
+            track = item['track']
             playlist_list.setdefault(f"{current_year} Vol. {current_half}", []).append(track['artists'][0]['name'] + " - " + track['name'])
         count += len(results['items'])
+        if len(results['items']) == 0:
+            break
     return playlist_list
 
-playlists = split_tracks()
 
-#print playlists
+playlists = split_tracks()
 for playlist_name in playlists:
     print(playlist_name)
     for track in playlists[playlist_name]:
