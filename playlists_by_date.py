@@ -24,45 +24,27 @@ if final_year < 1970 or final_year > datetime.now().year:
     print("Please provide a valid year between 1970 and the current year.")
     exit(1)
 
+# Possible bug when len of results is 0
 def split_tracks():
+    print("Collecting tracks...")
     current_year = datetime.now().year
     current_half = 1 if datetime.now().month <= 6 else 2
-    current_list = []
     playlist_list = {}
     count = 0
     cont = True
 
     while cont:
         results = sp.current_user_saved_tracks(limit=50, offset=count)
-        print("calling")
         for idx, item in enumerate(results['items']):
-            playlist_found = False
-            print("iterating")
-            while not playlist_found:
-                date_added = datetime.fromisoformat(item["added_at"][:-1])
-                print(date_added)
-                half = 1 if date_added.month <= 6 else 2
-                if (date_added.year != current_year or half != current_half):
-                    # Put current list into dictionary and start new list
-                    playlist_name = f"{current_year} Vol. {current_half}"
-                    playlist_list[playlist_name] = current_list
-                    current_list = []
-                    if (current_half == 2):
-                        current_half = 1
-                    else:
-                        current_half = 2
-                        current_year -= 1
-                    continue # Starts again with new playlist
-                playlist_found = True
-                track = item['track']
-                print(idx, track['artists'][0]['name'], " – ", track['name'])
-                print("current_year:", current_year, "current_half:", current_half)
-                count += 1
+            date_added = datetime.fromisoformat(item["added_at"][:-1])
+            current_year = date_added.year
+            current_half = 1 if date_added.month <= 6 else 2    
+            track = item['track']
             if (date_added.year < final_year):
                 cont = False
                 break
-            # Added to current list
-            current_list.append(track['artists'][0]['name'])
+            playlist_list.setdefault(f"{current_year} Vol. {current_half}", []).append(track['artists'][0]['name'] + " - " + track['name'])
+        count += len(results['items'])
     return playlist_list
 
 playlists = split_tracks()
