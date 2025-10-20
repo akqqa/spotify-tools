@@ -36,7 +36,6 @@ def split_tracks():
     while cont:
         results = sp.current_user_saved_tracks(limit=50, offset=count)
         for idx, item in enumerate(results['items']):
-            #
             date_added = datetime.fromisoformat(item["added_at"][:-1])
             current_year = date_added.year
             current_half = 1 if date_added.month <= 6 else 2    
@@ -52,6 +51,25 @@ def split_tracks():
             break
     return playlist_list
 
+def create_playlists(playlist_list):
+    # Get all playlists 50 at a time
+    # If name of playlist exists, mark in a new dictionary with same keys as playlist dict - default them to False and set to True if found
+    # Create all not found playlists, and update all found playlists (? maybe)
+    # if most recent playlist to create exists, then add any new songs to it
+    playlist_exists = dict.fromkeys(playlist_list.keys(), False)
+    count = 0
+    while True:
+        results = sp.current_user_playlists(limit=50, offset=count)
+        for item in results['items']:
+            print(item['name'])
+            if item['name'] in playlist_exists:
+                playlist_exists[item['name']] = True
+        count += len(results['items'])
+        if len(results['items']) == 0:
+            break
+    # For each playlist, either create and add tracks, or if existing compare tracks and add new ones
+    return playlist_exists
+
 
 playlists = split_tracks()
 for playlist_name in playlists:
@@ -60,3 +78,13 @@ for playlist_name in playlists:
         print("   ", track)
 for playlist_name in playlists:
     print(f"{playlist_name}: {len(playlists[playlist_name])} tracks")
+
+playlist_exists = create_playlists(playlists)
+for playlist_name in playlist_exists:
+    if playlist_exists[playlist_name]:
+        print(f"Playlist '{playlist_name}' exists and will be updated.")
+    else:
+        print(f"Playlist '{playlist_name}' does not exist and will be created.")
+
+
+sp.playlist_add_items(playlist_id='37i9dQZF1DXcBWIGoYBM5M', items=['4iV5W9uYEdYUVa79Axb7Rh'])
